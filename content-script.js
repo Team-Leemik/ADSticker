@@ -136,25 +136,36 @@ function getThumbnailsAndIds(thumbnails) {
   return thumbnailsAndVideoIds
 }
 
-function getRatingBarHtml() {
-  let ratingElement = '<ytrb-default></ytrb-default>'
-
-  return '<ytrb-bar' +
-      (userSettings.barOpacity !== 100
-          ? ' style="opacity:' + (userSettings.barOpacity / 100) + '"'
-          : ''
-      ) +
-      '>' +
-      ratingElement +
-      (userSettings.barTooltip
-          ? '<ytrb-tooltip><div>' + '</div></ytrb-tooltip>'
-          : ''
-      ) +
-      '</ytrb-bar>'
+async function getAdSummary(videoId){
+  const apiKey = 'YOUR API KEY HERE'; // input your api key
+  const channels = `https://www.googleapis.com/youtube/v3/videos?key=${apiKey}&id=${videoId}&part=snippet`;
+  const response = await fetch(channels);
+  const data = await response.json();
+  return data
 }
 
-function addRatingBar(thumbnail) {
-  $(thumbnail).append(getRatingBarHtml())
+function getRatingBarHtml(videoId) {
+  return getAdSummary(videoId).then(description => {
+    const ret =  '<ytrb-bar' +
+      (userSettings.barOpacity !== 100
+        ? ' style="opacity:' + (userSettings.barOpacity / 100) + '"'
+        : ''
+      ) +
+      '>' +
+      '<ytrb-default></ytrb-default>' +
+      (userSettings.barTooltip
+        ? '<ytrb-tooltip><div>' + description.items[0].snippet.description + '</div></ytrb-tooltip>'
+        : ''
+      ) +
+      '</ytrb-bar>';
+    return ret
+  });
+}
+
+function addRatingBar(thumbnail, videoId) {
+  getRatingBarHtml(videoId).then(ret => {
+    $(thumbnail).append(ret)
+  })
 }
 
 function processNewThumbnails() {
