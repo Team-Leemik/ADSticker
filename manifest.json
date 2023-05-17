@@ -32,7 +32,9 @@
       "storage"
     ],
     "host_permissions": [
-      "*://*.youtube.com/*"
+      "*://*.youtube.com/*",
+      "http://localhost:8080/"
+
     ],
     "web_accessible_resources": [{
       "resources": [

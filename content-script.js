@@ -192,12 +192,16 @@ function getRatingBarHtml(videoId) {
 
 function addRatingBar(thumbnail, videoId) {
 
-  var tmp = Math.floor(Math.random() * 2);
-  if (tmp == 1){
-    getRatingBarHtml(videoId).then(ret => {
-      $(thumbnail).append(ret)
-    })
-  }
+  // var tmp = Math.floor(Math.random() * 2);
+  // if (tmp == 1){
+  //   getRatingBarHtml(videoId).then(ret => {
+  //     $(thumbnail).append(ret)
+  //   })
+  // }
+
+  getRatingBarHtml(videoId).then(ret => {
+    $(thumbnail).append(ret)
+  })
 }
 
 // function processNewThumbnails() {
@@ -221,7 +225,7 @@ function getVideoData(thumbnail, videoId) {
         if (isAdIncluded === null) {
           // The API request failed, which is usually due to rate limiting, so
           // we will retry processing the thumbnail in the future.
-          retryProcessingThumbnailInTheFuture(thumbnail)
+          //retryProcessingThumbnailInTheFuture(thumbnail)
           resolve(null)
         } else {
           resolve(isAdIncluded.flag)
@@ -239,11 +243,13 @@ function processNewThumbnails() {
     getVideoData(thumbnail, videoId).then(videoData => {
       if (videoData !== null) {
         if (userSettings.barHeight !== 0) {
-          addRatingBar(thumbnail, videoData)
+          //added
+          if(videoData.flag)
+            addRatingBar(thumbnail, videoData)
         }
-        if (userSettings.showPercentage) {
-          addRatingPercentage(thumbnail, videoData)
-        }
+        // if (userSettings.showPercentage) {
+        //   addRatingPercentage(thumbnail, videoData)
+        // }
       }
     })
   }

@@ -47,8 +47,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       // Otherwise, fetch new data and cache it.
-      fetch(`localhost:8080/api/https://www.youtube.com/watch?v=${message.videoId}`)
-        .then(response => {
+      fetch('http://localhost:8080/url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({url: `https://www.youtube.com/watch?v=${message.videoId}`}),
+      }).then(response => {
           if (!response.ok) {
             sendResponse(null)
           } else {
@@ -57,7 +62,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 'flag' : data.flag
               }
               if (!(message.videoId in cache)) {
-                cache[message.videoId] = likesData
+                cache[message.videoId] = isAdIncluded
                 cacheTimes.push([Date.now(), message.videoId])
               }
               console.log(data)
@@ -67,7 +72,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             })
           }
         })
-
       // Returning `true` signals to the browser that we will send our
       // response asynchronously using `sendResponse()`.
       return true
