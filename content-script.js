@@ -200,14 +200,52 @@ function addRatingBar(thumbnail, videoId) {
   }
 }
 
+// function processNewThumbnails() {
+//   const thumbnails = getNewThumbnails()
+//   const thumbnailsAndVideoIds = getThumbnailsAndIds(thumbnails)
+
+//   for (const [thumbnail, videoId] of thumbnailsAndVideoIds) {
+//     if (userSettings.barHeight !== 0) {
+//       addRatingBar(thumbnail, videoId)
+//     }
+//   }
+// }
+
+
+
+function getVideoData(thumbnail, videoId) {
+  return new Promise(resolve => {
+    chrome.runtime.sendMessage(
+      {query: 'videoApiRequest', videoId: videoId},
+      (isAdIncluded) => {
+        if (isAdIncluded === null) {
+          // The API request failed, which is usually due to rate limiting, so
+          // we will retry processing the thumbnail in the future.
+          retryProcessingThumbnailInTheFuture(thumbnail)
+          resolve(null)
+        } else {
+          resolve(isAdIncluded.flag)
+        }
+      }
+    )
+  })
+}
+
 function processNewThumbnails() {
   const thumbnails = getNewThumbnails()
   const thumbnailsAndVideoIds = getThumbnailsAndIds(thumbnails)
 
   for (const [thumbnail, videoId] of thumbnailsAndVideoIds) {
-    if (userSettings.barHeight !== 0) {
-      addRatingBar(thumbnail, videoId)
-    }
+    getVideoData(thumbnail, videoId).then(videoData => {
+      if (videoData !== null) {
+        if (userSettings.barHeight !== 0) {
+          addRatingBar(thumbnail, videoData)
+        }
+        if (userSettings.showPercentage) {
+          addRatingPercentage(thumbnail, videoData)
+        }
+      }
+    })
   }
 }
 
