@@ -33,7 +33,6 @@ public class ChromeExtensionController {
         CompletableFuture<Double> likesAndDislikesFuture = likesAndDislikesRetriever.getLikesAndDislikes(data.getUrl());
 
         extensionData.setUrl(String.valueOf(0.7* NLPFuture.get() + 0.3*likesAndDislikesFuture.get()));
-        log.info(data.getUrl());
         return extensionData;
     }
 }

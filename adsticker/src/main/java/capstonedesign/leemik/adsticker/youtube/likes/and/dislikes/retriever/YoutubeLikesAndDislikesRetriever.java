@@ -1,55 +1,55 @@
 package capstonedesign.leemik.adsticker.youtube.likes.and.dislikes.retriever;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoStatistics;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
 
 @Component
+@Slf4j
 public class YoutubeLikesAndDislikesRetriever {
-    private final YouTube youTube;
-    private static final String API_KEY = "AIzaSyBg_339Pp9ssNABBFoc1VScZ0BIPvgR3B8";
+    private final String BASE_URL = "https://returnyoutubedislikeapi.com/Votes?videoId=";
+    private final RestTemplate restTemplate;
 
     @Autowired
-    public YoutubeLikesAndDislikesRetriever(YouTube youTube) {
-        this.youTube = youTube;
+    public YoutubeLikesAndDislikesRetriever(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
     }
 
     @Async
     public CompletableFuture<Double> getLikesAndDislikes(String videoId) throws IOException {
-        YouTube.Videos.List request = youTube.videos()
-                .list("statistics")
-                .setId(videoId)
-                .setKey(API_KEY);
+        String url = BASE_URL + videoId;
+        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root;
 
-        Video response = request.execute().getItems().get(0);
-        BigInteger likeCount = response.getStatistics().getLikeCount();
-        BigInteger dislikeCount = response.getStatistics().getDislikeCount();
+        try {
+            root = mapper.readTree(response.getBody());
+            Double likes = root.path("likes").asDouble();
+            Double dislikes = root.path("dislikes").asDouble();
 
-        Double likes;
-        Double dislikes;
+            log.info("Likes: " + likes + " Dislikes: " + dislikes);
+            return CompletableFuture.completedFuture(likes / (likes + dislikes));
 
-        if(likeCount == null) {
-            likes = (double) 0;
-        }
-        else {
-            likes = likeCount.doubleValue();
+        }   catch (JsonProcessingException e) {
+            e.printStackTrace();
         }
 
-        if(dislikeCount == null) {
-            dislikes = (double) 0;
-        }
-        else {
-            dislikes = dislikeCount.doubleValue();
-        }
-
-        return CompletableFuture.completedFuture(likes / (likes + dislikes));
+        return CompletableFuture.completedFuture(0.5);
     }
 }
