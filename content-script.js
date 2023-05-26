@@ -137,85 +137,55 @@ function getThumbnailsAndIds(thumbnails) {
 }
 
 async function getAdSummary(videoId){
-  const apiKey = ''; // input your api key
+  const apiKey = 'key'; // input your api key
   const channels = `https://www.googleapis.com/youtube/v3/videos?key=${apiKey}&id=${videoId}&part=snippet`;
   const response = await fetch(channels);
   const data = await response.json();
   return data
 }
 
-function getRatingBarHtml(videoId) {
+function getRatingBarHtml(videoId, videoData) {
   var tmp = Math.floor(Math.random() * 2);
-  var color = tmp==1? '#b2ffd9':'#FFA07A';
+  //var color = videoData < 0.5 ? '#b2ffd9' : '#ffa07a';
+  var color = tmp == 1 ? '#b2ffd9' : '#ffa07a';
+  console.log(videoData>1.1)
+  console.log('color', color);
   return getAdSummary(videoId).then(description => {
-    var ret =  '<ytrb-bar' +
-      (userSettings.barOpacity !== 100
-        ? ' style="opacity:' + (userSettings.barOpacity / 100) + '"'
-        : ''
-      ) +
-      '>' +
-    //   `<style>
-    //   ytrb-default {
-    //     display: flex;
-    //     height: var(--ytrb-bar-height);
-    //     background-color: ${color};
-    //     border-radius: 12px 0px 0px 12px;
-    //     position: relative;
-    //     font-weight: bold;
-    //     color: white;
-    //     align-items: center;
-    //     font-size: 16px;
-    //   }
-    
-    //   ytrb-default::before {
-    //     content: '';
-    //     position: absolute;
-    //     top: 0;
-    //     right: -15px;
-    //     border-top: 15px solid transparent;
-    //     border-bottom: 15px solid transparent;
-    //     border-left: 15px solid ${color};
-    //     z-index: 1;
-    //   }
-    // </style>
-    
-    // <ytrb-default style="background-color: ${color}">&nbsp;&nbsp;AD</ytrb-default>` +
-      `<ytrb-default>&nbsp&nbsp AD</ytrb-default>` +
+    var ret =
+      `<ytrb-bar${userSettings.barOpacity !== 100 ? ' style="opacity:' + userSettings.barOpacity / 100 + '"' : ''}>` +
+      `<ytrb-default style="
+        display: flex;
+        height: var(--ytrb-bar-height);
+        background-color: ${color};
+        border-radius: 12px 12px 12px 12px;
+        position: relative;
+        font-weight: bold;
+        color: white;
+        align-items: center;
+        font-size: 16px;
+      ">
+        &nbsp&nbsp AD
+      </ytrb-default>` +
       (userSettings.barTooltip
-        ? '<ytrb-tooltip><div style="text-align: center; font-size: 10px; overflow-y: scroll; max-height: 100px;">' + description.items[0].snippet.description + '</div></ytrb-tooltip>'
-        : ''
-      ) +
+        ? `<ytrb-tooltip>
+            <div style="
+              text-align: center;
+              font-size: 10px;
+              overflow-y: scroll;
+              max-height: 100px;
+            ">${description.items[0].snippet.description}</div>
+          </ytrb-tooltip>`
+        : '') +
       '</ytrb-bar>';
-    return ret
+    return ret;
   });
 }
 
-function addRatingBar(thumbnail, videoId) {
-
-  // var tmp = Math.floor(Math.random() * 2);
-  // if (tmp == 1){
-  //   getRatingBarHtml(videoId).then(ret => {
-  //     $(thumbnail).append(ret)
-  //   })
-  // }
-
-  getRatingBarHtml(videoId).then(ret => {
+function addRatingBar(thumbnail, videoId, videoData) {
+  getRatingBarHtml(videoId, videoData).then(ret => {
     $(thumbnail).append(ret)
   })
 }
-
-// function processNewThumbnails() {
-//   const thumbnails = getNewThumbnails()
-//   const thumbnailsAndVideoIds = getThumbnailsAndIds(thumbnails)
-
-//   for (const [thumbnail, videoId] of thumbnailsAndVideoIds) {
-//     if (userSettings.barHeight !== 0) {
-//       addRatingBar(thumbnail, videoId)
-//     }
-//   }
-// }
-
-
 
 function getVideoData(thumbnail, videoId) {
   return new Promise(resolve => {
@@ -223,9 +193,6 @@ function getVideoData(thumbnail, videoId) {
       {query: 'videoApiRequest', videoId: videoId},
       (isAdIncluded) => {
         if (isAdIncluded === null) {
-          // The API request failed, which is usually due to rate limiting, so
-          // we will retry processing the thumbnail in the future.
-          //retryProcessingThumbnailInTheFuture(thumbnail)
           resolve(null)
         } else {
           resolve(isAdIncluded.flag)
@@ -244,12 +211,20 @@ function processNewThumbnails() {
       if (videoData !== null) {
         if (userSettings.barHeight !== 0) {
           //added
-          if(videoData.flag)
-            addRatingBar(thumbnail, videoData)
+          console.log('hihi',typeof(videoData))
+          
+          if(videoData > 0.5){
+            console.log('Positive AD detected')
+            addRatingBar(thumbnail, videoId, videoData)
+          }
+          else if(videoData >= 0){
+            console.log('Negative AD detected')
+            addRatingBar(thumbnail, videoId, videoData)
+          }
+          else{
+            console.log('AD not detected')
+          }
         }
-        // if (userSettings.showPercentage) {
-        //   addRatingPercentage(thumbnail, videoData)
-        // }
       }
     })
   }

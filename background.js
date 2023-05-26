@@ -22,7 +22,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break
     
     case 'videoApiRequest':
-      // Remove expired cache data.
       const now = Date.now()
       let numRemoved = 0
       console.log(cacheTimes)
@@ -41,39 +40,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       if (message.videoId in cache) {
-        // Use cached data if it exists.
         sendResponse(cache[message.videoId])
         return
       }
 
-      // Otherwise, fetch new data and cache it.
       fetch('http://localhost:8080/url', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({url: `https://www.youtube.com/watch?v=${message.videoId}`}),
+        body: JSON.stringify({url: `${message.videoId}`}),
       }).then(response => {
           if (!response.ok) {
             sendResponse(null)
           } else {
             response.json().then(data => {
               const isAdIncluded = {
-                'flag' : data.flag
+                'flag' : parseFloat(data.url)
               }
               if (!(message.videoId in cache)) {
                 cache[message.videoId] = isAdIncluded
                 cacheTimes.push([Date.now(), message.videoId])
               }
-              console.log(data)
-              console.log(data)
-              console.log(data)
+              console.log('data : ',data)
+              console.log('isAdIncluded : ',isAdIncluded)
               sendResponse(isAdIncluded)
             })
           }
         })
-      // Returning `true` signals to the browser that we will send our
-      // response asynchronously using `sendResponse()`.
       return true
   }
 })

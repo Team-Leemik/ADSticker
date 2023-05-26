@@ -34,7 +34,6 @@
     "host_permissions": [
       "*://*.youtube.com/*",
       "http://localhost:8080/"
-
     ],
     "web_accessible_resources": [{
       "resources": [

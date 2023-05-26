@@ -12,7 +12,7 @@ ytrb-bar {
   opacity: var(--ytrb-bar-opacity);
 }
 
-ytrb-default {
+/* ytrb-default {
   display: flex;
   height: var(--ytrb-bar-height);
   background-color: #b2ffd9;
@@ -22,9 +22,9 @@ ytrb-default {
   color: white;
   align-items: center;
   font-size: 16px;
-}
+} */
 
-ytrb-default::before {
+/* ytrb-default::before {
   content: '';
   position: absolute;
   top: 0;
@@ -33,7 +33,7 @@ ytrb-default::before {
   border-bottom: 15px solid transparent;
   border-left: 15px solid #b2ffd9;
   z-index: 1;
-}
+} */
 
 #thumbnail-container {
   position: relative;
