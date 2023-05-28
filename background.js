@@ -62,7 +62,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 cache[message.videoId] = isAdIncluded
                 cacheTimes.push([Date.now(), message.videoId])
               }
-              console.log('data : ',data)
               console.log('isAdIncluded : ',isAdIncluded)
               sendResponse(isAdIncluded)
             })

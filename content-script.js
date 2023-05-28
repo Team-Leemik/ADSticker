@@ -146,10 +146,8 @@ async function getAdSummary(videoId){
 
 function getRatingBarHtml(videoId, videoData) {
   var tmp = Math.floor(Math.random() * 2);
-  //var color = videoData < 0.5 ? '#b2ffd9' : '#ffa07a';
-  var color = tmp == 1 ? '#b2ffd9' : '#ffa07a';
-  console.log(videoData>1.1)
-  console.log('color', color);
+  var color = videoData > 0.5 ? '#b2ffd9' : '#ffa07a';
+  //var color = tmp == 1 ? '#b2ffd9' : '#ffa07a';
   return getAdSummary(videoId).then(description => {
     var ret =
       `<ytrb-bar${userSettings.barOpacity !== 100 ? ' style="opacity:' + userSettings.barOpacity / 100 + '"' : ''}>` +
@@ -211,7 +209,6 @@ function processNewThumbnails() {
       if (videoData !== null) {
         if (userSettings.barHeight !== 0) {
           //added
-          console.log('hihi',typeof(videoData))
           
           if(videoData > 0.5){
             console.log('Positive AD detected')
