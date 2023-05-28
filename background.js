@@ -1,6 +1,9 @@
 let cache = {} // API 사용시 응답을 캐싱하는 객체
 let cacheTimes = [] // 캐시된 데이터가 언제 요청되었는지를 저장하는 배열
 let cacheDuration = 600000 // 캐시 유효기간 : 10분을 기준으로 한다.
+// Revision from Coje
+const requestLength = 100
+let pendingRequest = {}
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.get({cacheDuration: 600000}, function(settings) {
@@ -22,6 +25,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break
     
     case 'videoApiRequest':
+      // Revision from Coje
+      if(Object.keys(pendingRequest).length >= requestLength) {
+        pendingRequest = {};
+      }
+
+      if(pendingRequest[message.videoId]) {
+        return
+      }
+
+      pendingRequest[message.videoId] = true
+
       const now = Date.now()
       let numRemoved = 0
       console.log(cacheTimes)
