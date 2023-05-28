@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -32,9 +33,26 @@ public class YoutubeLikesAndDislikesRetriever {
     }
 
     @Async
-    public CompletableFuture<Double> getLikesAndDislikes(String videoId) throws IOException {
+    public CompletableFuture<Double> getLikesAndDislikes(String videoId) throws IOException, InterruptedException {
         String url = BASE_URL + videoId;
-        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+        ResponseEntity<String> response = null;
+        int retries = 3;
+        int delay = 1000;
+
+        for(int i=0;i < retries; i++) {
+            try{
+                response = restTemplate.getForEntity(url, String.class);
+                break;
+            } catch (HttpClientErrorException.TooManyRequests e) {
+                log.error("Too many request, wating for " + delay + "ms before retrying...");
+                Thread.sleep(delay);
+            }
+        }
+
+        if(response == null) {
+            return CompletableFuture.completedFuture(0.5);
+        }
+
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root;
 
@@ -43,7 +61,7 @@ public class YoutubeLikesAndDislikesRetriever {
             Double likes = root.path("likes").asDouble();
             Double dislikes = root.path("dislikes").asDouble();
 
-            log.info("Likes: " + likes + " Dislikes: " + dislikes);
+            log.info("VideoID : " + videoId + " Likes: " + likes + " Dislikes: " + dislikes + " Return Result : " + likes/(likes+ + dislikes));
             return CompletableFuture.completedFuture(likes / (likes + dislikes));
 
         }   catch (JsonProcessingException e) {

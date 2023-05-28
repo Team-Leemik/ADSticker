@@ -29,10 +29,11 @@ public class ChromeExtensionController {
     @PostMapping
     public ChromeExtensionData handleUrl(@RequestBody ChromeExtensionData data) throws IOException, ExecutionException, InterruptedException {
         log.info(data.toString());
-        CompletableFuture<Double> NLPFuture = modelController.callModel(data.getUrl());
+        //CompletableFuture<Double> NLPFuture = modelController.callModel(data.getUrl());
         CompletableFuture<Double> likesAndDislikesFuture = likesAndDislikesRetriever.getLikesAndDislikes(data.getUrl());
 
-        extensionData.setUrl(String.valueOf(0.7* NLPFuture.get() + 0.3*likesAndDislikesFuture.get()));
+        //extensionData.setUrl(String.valueOf(0.7* NLPFuture.get() + 0.3*likesAndDislikesFuture.get()));
+        extensionData.setUrl(String.valueOf(likesAndDislikesFuture.get()));
         return extensionData;
     }
 }
