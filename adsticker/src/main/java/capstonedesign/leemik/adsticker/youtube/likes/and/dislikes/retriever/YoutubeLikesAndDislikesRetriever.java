@@ -32,8 +32,7 @@ public class YoutubeLikesAndDislikesRetriever {
         this.restTemplate = restTemplate;
     }
 
-    @Async
-    public CompletableFuture<Double> getLikesAndDislikes(String videoId) throws IOException, InterruptedException {
+    public Double getLikesAndDislikes(String videoId) throws IOException, InterruptedException {
         String url = BASE_URL + videoId;
         ResponseEntity<String> response = null;
         int retries = 3;
@@ -50,7 +49,7 @@ public class YoutubeLikesAndDislikesRetriever {
         }
 
         if(response == null) {
-            return CompletableFuture.completedFuture(0.5);
+            return 0.5;
         }
 
         ObjectMapper mapper = new ObjectMapper();
@@ -62,12 +61,12 @@ public class YoutubeLikesAndDislikesRetriever {
             Double dislikes = root.path("dislikes").asDouble();
 
             log.info("VideoID : " + videoId + " Likes: " + likes + " Dislikes: " + dislikes + " Return Result : " + likes/(likes+ + dislikes));
-            return CompletableFuture.completedFuture(likes / (likes + dislikes));
+            return likes / (likes + dislikes);
 
         }   catch (JsonProcessingException e) {
             e.printStackTrace();
         }
 
-        return CompletableFuture.completedFuture(0.5);
+        return 0.5;
     }
 }

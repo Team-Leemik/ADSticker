@@ -19,9 +19,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-
-//@RestController
 
 @Component
 @Slf4j
@@ -29,6 +28,8 @@ public class ModelController {
     private final RestTemplate restTemplate;
     private final LeemikEnvironment env;
     private final YoutubeCommentRetriever commentRetriever;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Autowired
     public ModelController(RestTemplate restTemplate, LeemikEnvironment env, YoutubeCommentRetriever commentRetriever) {
         this.restTemplate = restTemplate;
@@ -37,8 +38,7 @@ public class ModelController {
     }
 
     private String processNLP(String inputData) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String modelUrl = env.getHost() + ":" + env.getPort();
+        String modelUrl = env.getHost() + ":" + env.getNLPport();
         String jsonInputData;
 
         try {
@@ -54,8 +54,7 @@ public class ModelController {
         return restTemplate.postForObject(modelUrl, entity, String.class);
     }
 
-    @Async
-    public CompletableFuture<Double> callModel(String url) throws IOException {
+    public Double callModel(String url) throws IOException {
         List<String> comments = commentRetriever.getComments(url);
         Double sumNLP = (double)0;
 
@@ -63,6 +62,25 @@ public class ModelController {
             sumNLP += Double.parseDouble(processNLP(str));
         }
 
-        return CompletableFuture.completedFuture(sumNLP/comments.size());
+        return sumNLP/comments.size();
+    }
+
+    public boolean checkAD(String url) {
+        //String modelUrl = env.getHost() + ":" + env.getADPort();
+        String modelUrl = env.getHost() + ":5001/CheckAd";
+        String jsonInputData;
+
+        try {
+            jsonInputData = objectMapper.writeValueAsString(url);
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting url to JSON", e);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(jsonInputData, headers);
+
+        double result = Double.parseDouble(Objects.requireNonNull(restTemplate.postForObject(modelUrl, entity, String.class)));
+        return result == 1.0;
     }
 }

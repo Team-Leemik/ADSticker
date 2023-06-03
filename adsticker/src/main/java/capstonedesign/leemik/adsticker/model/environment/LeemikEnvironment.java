@@ -10,6 +10,9 @@ public class LeemikEnvironment {
     @Value("${leemik.host}")
     String host;
 
-    @Value("${leemik.port}")
-    String port;
+    @Value("${leemik.nlp.port}")
+    String NLPport;
+
+    @Value("${leemik.ad.port}")
+    String ADPort;
 }

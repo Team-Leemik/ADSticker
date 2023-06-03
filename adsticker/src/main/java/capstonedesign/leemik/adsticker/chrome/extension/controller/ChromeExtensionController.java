@@ -28,12 +28,19 @@ public class ChromeExtensionController {
     }
     @PostMapping
     public ChromeExtensionData handleUrl(@RequestBody ChromeExtensionData data) throws IOException, ExecutionException, InterruptedException {
-        log.info(data.toString());
-        //CompletableFuture<Double> NLPFuture = modelController.callModel(data.getUrl());
-        CompletableFuture<Double> likesAndDislikesFuture = likesAndDislikesRetriever.getLikesAndDislikes(data.getUrl());
+        log.info("Process of " + data.getUrl() + " started.");
 
-        //extensionData.setUrl(String.valueOf(0.7* NLPFuture.get() + 0.3*likesAndDislikesFuture.get()));
-        extensionData.setUrl(String.valueOf(likesAndDislikesFuture.get()));
+        if(!modelController.checkAD(data.getUrl())) {
+            log.info(data.getUrl() + " is not AD");
+            extensionData.setUrl("-1");
+            return extensionData;
+        }
+
+        log.info(data.getUrl() + " is AD");
+        Double NLPResult = modelController.callModel(data.getUrl());
+        Double commentResult = likesAndDislikesRetriever.getLikesAndDislikes(data.getUrl());
+
+        extensionData.setUrl(String.valueOf(0.7* NLPResult + 0.3 * commentResult));
         return extensionData;
     }
 }
