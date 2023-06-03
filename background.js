@@ -36,9 +36,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       pendingRequest[message.videoId] = true
 
+      /*
       const now = Date.now()
       let numRemoved = 0
-      console.log(cacheTimes)
+      //console.log(cacheTimes)
       for (const [fetchTime, videoId] of cacheTimes) {
         console.log('[fetchTime, videoId]',fetchTime,videoId)
         if (now - fetchTime > cacheDuration) {
@@ -51,7 +52,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       
       if (numRemoved > 0) {
         cacheTimes = cacheTimes.slice(numRemoved)
-      }
+      }*/
 
       if (message.videoId in cache) {
         sendResponse(cache[message.videoId])

@@ -1,4 +1,5 @@
-const HANDLE_DOM_MUTATIONS_THROTTLE_MS = 100
+const TIME_OUT_TERM = 3000
+const HANDLE_DOM_MUTATIONS_THROTTLE_MS = TIME_OUT_TERM
 let domMutationsAreThrottled = false
 let hasUnseenDomMutations = false
 
@@ -55,6 +56,10 @@ const DEFAULT_USER_SETTINGS = {
   useOnVideoPage: false,
 }
 let userSettings = DEFAULT_USER_SETTINGS
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve,ms));
+}
 
 function getNewThumbnails() {
   let thumbnails = []
@@ -147,7 +152,6 @@ async function getAdSummary(videoId){
 function getRatingBarHtml(videoId, videoData) {
   var tmp = Math.floor(Math.random() * 2);
   var color = videoData > 0.5 ? '#b2ffd9' : '#ffa07a';
-  //var color = tmp == 1 ? '#b2ffd9' : '#ffa07a';
   return getAdSummary(videoId).then(description => {
     var ret =
       `<ytrb-bar${userSettings.barOpacity !== 100 ? ' style="opacity:' + userSettings.barOpacity / 100 + '"' : ''}>` +
@@ -200,16 +204,14 @@ function getVideoData(thumbnail, videoId) {
   })
 }
 
-function processNewThumbnails() {
+async function processNewThumbnails() {
   const thumbnails = getNewThumbnails()
   const thumbnailsAndVideoIds = getThumbnailsAndIds(thumbnails)
-
   for (const [thumbnail, videoId] of thumbnailsAndVideoIds) {
+    await delay(TIME_OUT_TERM);
     getVideoData(thumbnail, videoId).then(videoData => {
       if (videoData !== null) {
         if (userSettings.barHeight !== 0) {
-          //added
-          
           if(videoData > 0.5){
             console.log('Positive AD detected')
             addRatingBar(thumbnail, videoId, videoData)
