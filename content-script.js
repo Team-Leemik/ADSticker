@@ -150,7 +150,6 @@ async function getAdSummary(videoId){
 }
 
 function getRatingBarHtml(videoId, videoData) {
-  var tmp = Math.floor(Math.random() * 2);
   var color = videoData > 0.5 ? '#b2ffd9' : '#ffa07a';
   return getAdSummary(videoId).then(description => {
     var ret =
@@ -228,6 +227,7 @@ async function processNewThumbnails() {
     })
   }
 }
+
 
 function handleDomMutations() {
   if (domMutationsAreThrottled) {
