@@ -163,7 +163,7 @@ function getRatingBarHtml(videoId, videoData) {
         font-weight: bold;
         color: white;
         align-items: center;
-        font-size: 16px;
+        font-size: 120%;
       ">
         &nbsp&nbsp AD
       </ytrb-default>` +
