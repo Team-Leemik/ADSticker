@@ -1,4 +1,5 @@
-const HANDLE_DOM_MUTATIONS_THROTTLE_MS = 100
+const TIME_OUT_TERM = 3000
+const HANDLE_DOM_MUTATIONS_THROTTLE_MS = TIME_OUT_TERM
 let domMutationsAreThrottled = false
 let hasUnseenDomMutations = false
 
@@ -55,6 +56,10 @@ const DEFAULT_USER_SETTINGS = {
   useOnVideoPage: false,
 }
 let userSettings = DEFAULT_USER_SETTINGS
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve,ms));
+}
 
 function getNewThumbnails() {
   let thumbnails = []
@@ -137,47 +142,92 @@ function getThumbnailsAndIds(thumbnails) {
 }
 
 async function getAdSummary(videoId){
-  const apiKey = 'YOUR API KEY HERE'; // input your api key
+  const apiKey = 'key'; // input your api key
   const channels = `https://www.googleapis.com/youtube/v3/videos?key=${apiKey}&id=${videoId}&part=snippet`;
   const response = await fetch(channels);
   const data = await response.json();
   return data
 }
 
-function getRatingBarHtml(videoId) {
+function getRatingBarHtml(videoId, videoData) {
+  var color = videoData > 0.5 ? '#b2ffd9' : '#ffa07a';
   return getAdSummary(videoId).then(description => {
-    const ret =  '<ytrb-bar' +
-      (userSettings.barOpacity !== 100
-        ? ' style="opacity:' + (userSettings.barOpacity / 100) + '"'
-        : ''
-      ) +
-      '>' +
-      '<ytrb-default></ytrb-default>' +
+    var ret =
+      `<ytrb-bar${userSettings.barOpacity !== 100 ? ' style="opacity:' + userSettings.barOpacity / 100 + '"' : ''}>` +
+      `<ytrb-default style="
+        display: flex;
+        height: var(--ytrb-bar-height);
+        background-color: ${color};
+        border-radius: 12px 12px 12px 12px;
+        position: relative;
+        font-weight: bold;
+        color: white;
+        align-items: center;
+        font-size: 120%;
+      ">
+        &nbsp&nbsp AD
+      </ytrb-default>` +
       (userSettings.barTooltip
-        ? '<ytrb-tooltip><div>' + description.items[0].snippet.description + '</div></ytrb-tooltip>'
-        : ''
-      ) +
+        ? `<ytrb-tooltip>
+            <div style="
+              text-align: center;
+              font-size: 10px;
+              overflow-y: scroll;
+              max-height: 100px;
+            ">${description.items[0].snippet.description}</div>
+          </ytrb-tooltip>`
+        : '') +
       '</ytrb-bar>';
-    return ret
+    return ret;
   });
 }
 
-function addRatingBar(thumbnail, videoId) {
-  getRatingBarHtml(videoId).then(ret => {
+function addRatingBar(thumbnail, videoId, videoData) {
+  getRatingBarHtml(videoId, videoData).then(ret => {
     $(thumbnail).append(ret)
   })
 }
 
-function processNewThumbnails() {
+function getVideoData(thumbnail, videoId) {
+  return new Promise(resolve => {
+    chrome.runtime.sendMessage(
+      {query: 'videoApiRequest', videoId: videoId},
+      (isAdIncluded) => {
+        if (isAdIncluded === null) {
+          resolve(null)
+        } else {
+          resolve(isAdIncluded.flag)
+        }
+      }
+    )
+  })
+}
+
+async function processNewThumbnails() {
   const thumbnails = getNewThumbnails()
   const thumbnailsAndVideoIds = getThumbnailsAndIds(thumbnails)
-
   for (const [thumbnail, videoId] of thumbnailsAndVideoIds) {
-    if (userSettings.barHeight !== 0) {
-      addRatingBar(thumbnail, videoId)
-    }
+    await delay(TIME_OUT_TERM);
+    getVideoData(thumbnail, videoId).then(videoData => {
+      if (videoData !== null) {
+        if (userSettings.barHeight !== 0) {
+          if(videoData > 0.5){
+            console.log('Positive AD detected')
+            addRatingBar(thumbnail, videoId, videoData)
+          }
+          else if(videoData >= 0){
+            console.log('Negative AD detected')
+            addRatingBar(thumbnail, videoId, videoData)
+          }
+          else{
+            console.log('AD not detected')
+          }
+        }
+      }
+    })
   }
 }
+
 
 function handleDomMutations() {
   if (domMutationsAreThrottled) {
@@ -226,4 +276,5 @@ chrome.storage.sync.get(DEFAULT_USER_SETTINGS, function(storedSettings) {
   }
   handleDomMutations()
   mutationObserver.observe(document.body, {childList: true, subtree: true})
+
 })

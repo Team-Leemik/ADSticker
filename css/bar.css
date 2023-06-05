@@ -12,24 +12,28 @@ ytrb-bar {
   opacity: var(--ytrb-bar-opacity);
 }
 
-ytrb-default {
+/* ytrb-default {
   display: flex;
   height: var(--ytrb-bar-height);
-  background-color: #33c923;
+  background-color: #b2ffd9;
   border-radius: 12px 0px 0px 12px;
   position: relative;
-}
+  font-weight: bold;
+  color: white;
+  align-items: center;
+  font-size: 16px;
+} */
 
-ytrb-default::before {
+/* ytrb-default::before {
   content: '';
   position: absolute;
   top: 0;
   right: -15px;
   border-top: 15px solid transparent;
   border-bottom: 15px solid transparent;
-  border-left: 15px solid #33c923;
+  border-left: 15px solid #b2ffd9;
   z-index: 1;
-}
+} */
 
 #thumbnail-container {
   position: relative;
