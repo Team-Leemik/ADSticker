@@ -276,4 +276,5 @@ chrome.storage.sync.get(DEFAULT_USER_SETTINGS, function(storedSettings) {
   }
   handleDomMutations()
   mutationObserver.observe(document.body, {childList: true, subtree: true})
+
 })
